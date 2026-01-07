@@ -12,6 +12,7 @@ const game = {
     finalSentence: "",
     logs: [], // Array of { time, text }
     qaLogs: [], // Array of { question, answer }
+    level: 1,
 
     // Configuration
     enemies: [
@@ -63,12 +64,31 @@ const game = {
     init: function () {
         this.updateScene(0);
         this.showStep(0);
+        this.updateLevelDisplay();
 
         // Check for save data
         if (localStorage.getItem('rpg_save')) {
             const btn = document.getElementById('continue-btn');
             if (btn) btn.style.display = 'inline-block';
         }
+    },
+
+    // Level System
+    levelUp: function () {
+        this.level++;
+        this.updateLevelDisplay();
+
+        // Trigger Animation
+        const effect = document.getElementById('level-up-effect');
+        effect.classList.remove('level-up-anim');
+        void effect.offsetWidth; // Trigger reflow
+        effect.classList.add('level-up-anim');
+
+        this.log(`【システム】 レベルが ${this.level} に あがった！`);
+    },
+
+    updateLevelDisplay: function () {
+        document.getElementById('level-display').textContent = `Lv. ${this.level}`;
     },
 
     // Save & Load System
@@ -97,7 +117,8 @@ const game = {
             q4Answers: this.q4Answers,
             finalSentence: this.finalSentence,
             logs: this.logs,
-            qaLogs: this.qaLogs
+            qaLogs: this.qaLogs,
+            level: this.level
         };
     },
 
@@ -111,11 +132,13 @@ const game = {
         this.finalSentence = data.finalSentence || "";
         this.logs = data.logs || [];
         this.qaLogs = data.qaLogs || [];
+        this.level = data.level || 1;
 
         // Restore UI
         this.updateScene(this.currentStep);
         this.showStep(this.currentStep);
         this.onStepEnter(this.currentStep);
+        this.updateLevelDisplay();
 
         // Restore Logs
         document.getElementById('log-content').innerHTML = '';
@@ -212,6 +235,11 @@ const game = {
     // Navigation
     nextStep: function () {
         if (this.currentStep < 6) {
+            // Level Up Check: Only level up when moving forward from a battle step (1-5)
+            if (this.currentStep >= 1 && this.currentStep <= 5) {
+                this.levelUp();
+            }
+
             this.currentStep++;
             this.updateScene(this.currentStep);
             this.showStep(this.currentStep);
