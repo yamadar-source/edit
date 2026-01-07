@@ -62,10 +62,11 @@
                             style="display:none; margin-top:10px;">つづきから</button>
                     </div>
 
-                    <!-- Quest 1 -->
+                    <!-- Quest 1: Money Reason -->
                     <div id="step-1" class="step">
+                        <p class="instruction">質問①「代行編集に“お金を払う理由”って何だと思いますか？」</p>
                         <div class="battle-input-group">
-                            <input type="text" id="q1-input" placeholder="こうげき（りゆう）を にゅうりょく"
+                            <input type="text" id="q1-input" placeholder="ぱっと出た言葉でOK（単語1つでもOK）"
                                 onkeypress="game.handleQ1Input(event)">
                             <button class="btn-action" onclick="game.addReason()">こうげき</button>
                         </div>
@@ -76,79 +77,77 @@
                         <button class="btn-next" onclick="game.nextStep()" disabled id="q1-next">つぎへ すすむ</button>
                     </div>
 
-                    <!-- Quest 2 -->
+                    <!-- Quest 2: Who's Value? (Classification) -->
                     <div id="step-2" class="step">
-                        <p class="instruction">クリティカルヒット（いちばん こまるもの）を えらべ！</p>
-                        <div id="q2-list" class="selection-list"></div>
+                        <p class="instruction">質問②「今出た言葉って、“誰にとって”の価値だと思いますか？」</p>
+                        <div class="classification-container">
+                            <div class="column" id="col-client">
+                                <h3>発注側</h3>
+                                <div class="drop-zone" id="zone-client"></div>
+                            </div>
+                            <div class="column center">
+                                <h3>両方／未分類</h3>
+                                <div class="drop-zone" id="zone-both"></div>
+                            </div>
+                            <div class="column" id="col-editor">
+                                <h3>編集側</h3>
+                                <div class="drop-zone" id="zone-editor"></div>
+                            </div>
+                        </div>
                         <button class="btn-next" onclick="game.nextStep()" disabled id="q2-next">けってい</button>
                     </div>
 
-                    <!-- Quest 3 -->
+                    <!-- Quest 3: In-house? (Selection) -->
                     <div id="step-3" class="step">
-                        <p class="instruction">ぞくせいを ぶんるいせよ！</p>
-                        <div class="classification-container">
-                            <div class="column" id="col-task">
-                                <h3>サギョウ</h3>
-                                <div class="drop-zone" id="zone-task"></div>
-                            </div>
-                            <div class="column center">
-                                <h3>ミブンルイ</h3>
-                                <div class="drop-zone" id="zone-uncategorized"></div>
-                            </div>
-                            <div class="column" id="col-impact">
-                                <h3>エイキョウ</h3>
-                                <div class="drop-zone" id="zone-impact"></div>
-                            </div>
-                        </div>
+                        <p class="instruction">質問③「それって“内製”でも同じことはできますか？」</p>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">内製では難しい・迷うものを選んでください</p>
+                        <div id="q3-list" class="selection-list"></div>
                         <button class="btn-next" onclick="game.nextStep()" disabled id="q3-next">つぎへ すすむ</button>
                     </div>
 
-                    <!-- Quest 4 (Deep Dive) -->
+                    <!-- Quest 4: Shoulder what? -->
                     <div id="step-4" class="step">
-                        <div id="q4-container">
-                            <!-- Dynamic Q4 Content will be injected here -->
-                        </div>
+                        <p class="instruction">質問④「代行編集って“◯◯を肩代わりしてくれる存在”と言えそうですか？」</p>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">責任、判断、時間、不安、クオリティの担保 など</p>
                         <div class="input-group-vertical">
-                            <input type="text" id="q4-input" placeholder="こたえを にゅうりょく"
+                            <input type="text" id="q4-input" placeholder="◯◯に当てはまる言葉を入力"
                                 onkeypress="game.handleQ4Input(event)">
                             <button class="btn-action" onclick="game.submitQ4Answer()">こうげき</button>
                         </div>
                     </div>
 
-                    <!-- Quest 5 -->
+                    <!-- Quest 5: Closing -->
                     <div id="step-5" class="step">
-                        <p class="instruction">さいごの いちげき（まとめ）を はなて！</p>
-                        <textarea id="q5-input" rows="3" placeholder="..."></textarea>
-                        <button class="btn-primary" onclick="game.finishGame()">トドメを さす</button>
+                        <p class="instruction">「この認識、大きくズレてる感じはしませんか？」</p>
+                        <div class="nav-buttons">
+                            <button class="btn-primary" onclick="game.finishGame(true)">YES (クエストクリア)</button>
+                            <button class="btn-secondary" onclick="game.finishGame(false)">NO (次の冒険へ)</button>
+                        </div>
                     </div>
 
                     <!-- Summary -->
                     <div id="step-6" class="step">
                         <h2>ぼうけんの きろく</h2>
                         <div class="summary-scroll">
-                            <div class="summary-section">
-                                <h3>👑 クリティカル</h3>
-                                <p id="sum-critical"></p>
+                            <div id="summary-closing-msg" style="margin-bottom: 20px; color: var(--accent-primary);">
                             </div>
                             <div class="summary-section">
-                                <h3>💎 でんせつの コトバ</h3>
-                                <p id="sum-sentence"></p>
+                                <h3>💎 代行編集の価値（肩代わりするもの）</h3>
+                                <p id="sum-shoulder" style="font-size: 1.5rem;"></p>
                             </div>
                             <div class="summary-grid">
                                 <div class="summary-col">
-                                    <h4>サギョウ</h4>
-                                    <ul id="sum-task-list"></ul>
+                                    <h4>発注側の価値</h4>
+                                    <ul id="sum-client-list"></ul>
                                 </div>
                                 <div class="summary-col">
-                                    <h4>エイキョウ</h4>
-                                    <ul id="sum-impact-list"></ul>
+                                    <h4>編集側の価値</h4>
+                                    <ul id="sum-editor-list"></ul>
                                 </div>
                             </div>
-                            <div class="summary-grid">
-                                <div class="summary-col">
-                                    <h4>Q4 カイトウ</h4>
-                                    <ul id="sum-q4-list"></ul>
-                                </div>
+                            <div class="summary-section">
+                                <h3>🛠 内製では難しいもの</h3>
+                                <ul id="sum-hard-list"></ul>
                             </div>
                         </div>
                         <div class="nav-buttons">

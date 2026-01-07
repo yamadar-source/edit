@@ -436,6 +436,33 @@ button:disabled {
     font-size: 0.9rem;
 }
 
+.selection-list {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.selection-item {
+    background: #000;
+    border: 2px solid #fff;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selection-item:hover {
+    background: var(--window-bg);
+}
+
+.selection-item.selected {
+    background: var(--accent-primary);
+    color: #000;
+    border-color: #fff;
+}
+
 /* Quest 4 Deep Dive */
 #q4-container {
     margin-bottom: 20px;

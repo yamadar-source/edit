@@ -1,15 +1,14 @@
 const game = {
     currentStep: 0,
-    q4Step: 0, // 0 to 6 for the 7 steps of Quest 4
     reasons: [],
-    criticalIndex: -1,
     classifications: {
-        task: [],
-        impact: [],
-        uncategorized: []
+        client: [],
+        editor: [],
+        both: []
     },
-    q4Answers: [], // Array of objects { question, answer }
-    finalSentence: "",
+    inHouseHard: [], // Array of strings from reasons that are hard to do in-house
+    shoulderValue: "", // Answer to Q4
+    closingYes: true, // Answer to Step 5
     logs: [], // Array of { time, text }
     qaLogs: [], // Array of { question, answer }
     level: 1,
@@ -21,44 +20,6 @@ const game = {
         { name: "ゴースト", img: "ghost.png", bg: "bg-dungeon" }, // Q3
         { name: "ゴーレム", img: "golem.png", bg: "bg-castle" }, // Q4
         { name: "ドラゴン", img: "boss.png", bg: "bg-castle" } // Q5 & Summary
-    ],
-
-    q4Questions: [
-        {
-            title: "STEP 1｜キリクチを ズラス",
-            q: "Q4-① ナイセイにしたしゅんかん “ヨワク” なりそうなものは？",
-            aim: "シツが さがる・ツヅカなくナル に イシキを ムケル"
-        },
-        {
-            title: "STEP 1｜キリクチを ズラス",
-            q: "Q4-② それがヨワクなるとしたら ドコで ムリが ウマレそう？",
-            aim: "ヒト・ジカン・ハンダン・カンジョウ の ドコに フカが シュウチュウするか"
-        },
-        {
-            title: "STEP 2｜ヘンカに キヅく",
-            q: "Q4-③ ダイコウにしていることで “カンガエなくて ヨクなっているコト” は？",
-            aim: "ヘンシュウ＝サギョウ から シコウ・ハンダンへ シテンを アゲル"
-        },
-        {
-            title: "STEP 2｜ヘンカに キヅく",
-            q: "Q4-④ ギャクに ホンライやるべきコトに ツカエている ジカンは？",
-            aim: "アイタじかん ではなく “マエを ムケているジカン” に フォーカス"
-        },
-        {
-            title: "STEP 3｜カンジョウの ヘンカ",
-            q: "Q4-⑤ ダイコウにしていることで セイシンテキに ラクになっている シュンカンは？",
-            aim: "スウチカしづらいが ジツは イチバン おおきな カチ"
-        },
-        {
-            title: "STEP 3｜カンジョウの ヘンカ",
-            q: "Q4-⑥ もし ゼンブ ナイセイに モドしたら イチバンさいしょに シンドクなりそうなのは？",
-            aim: "ウシナウもの から ダイコウのカチを ギャクサン させる"
-        },
-        {
-            title: "STEP 4｜ダイコウ ならでは",
-            q: "Q4-⑦ イマのハナシを マトめると “ダイコウだからこそ” とイエル カチは？",
-            aim: "チラばった コトバを ジブンたちの コトバに シュウソク させる"
-        }
     ],
 
     init: function () {
@@ -110,12 +71,11 @@ const game = {
     createSaveData: function () {
         return {
             currentStep: this.currentStep,
-            q4Step: this.q4Step,
             reasons: this.reasons,
-            criticalIndex: this.criticalIndex,
             classifications: this.classifications,
-            q4Answers: this.q4Answers,
-            finalSentence: this.finalSentence,
+            inHouseHard: this.inHouseHard,
+            shoulderValue: this.shoulderValue,
+            closingYes: this.closingYes,
             logs: this.logs,
             qaLogs: this.qaLogs,
             level: this.level
@@ -124,12 +84,11 @@ const game = {
 
     loadData: function (data) {
         this.currentStep = data.currentStep;
-        this.q4Step = data.q4Step;
         this.reasons = data.reasons || [];
-        this.criticalIndex = data.criticalIndex;
-        this.classifications = data.classifications || { task: [], impact: [], uncategorized: [] };
-        this.q4Answers = data.q4Answers || [];
-        this.finalSentence = data.finalSentence || "";
+        this.classifications = data.classifications || { client: [], editor: [], both: [] };
+        this.inHouseHard = data.inHouseHard || [];
+        this.shoulderValue = data.shoulderValue || "";
+        this.closingYes = data.closingYes !== undefined ? data.closingYes : true;
         this.logs = data.logs || [];
         this.qaLogs = data.qaLogs || [];
         this.level = data.level || 1;
@@ -297,7 +256,6 @@ const game = {
         } else if (step === 3) {
             this.renderQ3();
         } else if (step === 4) {
-            this.q4Step = 0;
             this.renderQ4();
         } else if (step === 6) {
             this.renderSummary();
@@ -319,7 +277,7 @@ const game = {
         }, 500);
     },
 
-    // Quest 1
+    // Quest 1: Money Reason
     handleQ1Input: function (event) {
         if (event.key === 'Enter') this.addReason();
     },
@@ -346,40 +304,20 @@ const game = {
         list.innerHTML = this.reasons.map(r => `<li>${r}</li>`).join('');
     },
 
-    // Quest 2
+    // Quest 2: Who's Value? (Classification)
     renderQ2: function () {
-        const list = document.getElementById('q2-list');
-        list.innerHTML = '';
-        this.reasons.forEach((reason, index) => {
-            const div = document.createElement('div');
-            div.className = 'selection-item';
-            if (index === this.criticalIndex) div.classList.add('selected');
-            div.textContent = reason;
-            div.onclick = () => {
-                this.criticalIndex = index;
-                this.renderQ2();
-                this.attackEffect();
-                this.log(`【クリティカル】 ${reason} を せんたく`);
-                this.logQA("一番困るものは？", reason);
-                document.getElementById('q2-next').disabled = false;
-            };
-            list.appendChild(div);
-        });
-    },
-
-    // Quest 3
-    renderQ3: function () {
-        if (this.classifications.uncategorized.length === 0 &&
-            this.classifications.task.length === 0 &&
-            this.classifications.impact.length === 0) {
-            this.classifications.uncategorized = [...this.reasons];
+        // Initialize classifications if empty
+        if (this.classifications.client.length === 0 &&
+            this.classifications.editor.length === 0 &&
+            this.classifications.both.length === 0) {
+            this.classifications.both = [...this.reasons];
         }
 
-        this.renderZone('zone-task', this.classifications.task, 'task');
-        this.renderZone('zone-uncategorized', this.classifications.uncategorized, 'uncategorized');
-        this.renderZone('zone-impact', this.classifications.impact, 'impact');
+        this.renderZone('zone-client', this.classifications.client, 'client');
+        this.renderZone('zone-both', this.classifications.both, 'both');
+        this.renderZone('zone-editor', this.classifications.editor, 'editor');
 
-        document.getElementById('q3-next').disabled = this.classifications.uncategorized.length > 0;
+        document.getElementById('q2-next').disabled = this.classifications.both.length > 0;
     },
 
     renderZone: function (zoneId, items, type) {
@@ -399,33 +337,44 @@ const game = {
 
     moveItem: function (fromType, index) {
         const item = this.classifications[fromType].splice(index, 1)[0];
-        let nextType = 'uncategorized';
-        let nextTypeName = 'ミブンルイ';
-        if (fromType === 'uncategorized') { nextType = 'task'; nextTypeName = 'サギョウ'; }
-        else if (fromType === 'task') { nextType = 'impact'; nextTypeName = 'エイキョウ'; }
-        else if (fromType === 'impact') { nextType = 'uncategorized'; nextTypeName = 'ミブンルイ'; }
+        let nextType = 'both';
+        let nextTypeName = '両方';
+        if (fromType === 'both') { nextType = 'client'; nextTypeName = '発注側'; }
+        else if (fromType === 'client') { nextType = 'editor'; nextTypeName = '編集側'; }
+        else if (fromType === 'editor') { nextType = 'both'; nextTypeName = '両方'; }
 
         this.classifications[nextType].push(item);
         this.log(`【ぶんるい】 ${item} → ${nextTypeName}`);
-        this.renderQ3();
+        this.renderQ2();
     },
 
-    // Quest 4 (7 Steps)
+    // Quest 3: In-house? (Selection)
+    renderQ3: function () {
+        const list = document.getElementById('q3-list');
+        list.innerHTML = '';
+        this.reasons.forEach((reason, index) => {
+            const div = document.createElement('div');
+            div.className = 'selection-item';
+            if (this.inHouseHard.includes(reason)) div.classList.add('selected');
+            div.textContent = reason;
+            div.onclick = () => {
+                if (this.inHouseHard.includes(reason)) {
+                    this.inHouseHard = this.inHouseHard.filter(r => r !== reason);
+                } else {
+                    this.inHouseHard.push(reason);
+                }
+                this.renderQ3();
+                this.attackEffect();
+                this.log(`【せんたく】 ${reason} を ${this.inHouseHard.includes(reason) ? '追加' : '削除'}`);
+                document.getElementById('q3-next').disabled = false; // Enable once interacted
+            };
+            list.appendChild(div);
+        });
+    },
+
+    // Quest 4: Shoulder what?
     renderQ4: function () {
-        if (this.q4Step >= this.q4Questions.length) {
-            this.nextStep(); // Go to Quest 5
-            return;
-        }
-
-        const q = this.q4Questions[this.q4Step];
-        const container = document.getElementById('q4-container');
-        container.innerHTML = `
-            <h3>${q.title}</h3>
-            <p><strong>${q.q}</strong></p>
-            <p style="font-size: 0.9rem; color: #aaa;">🔹狙い: ${q.aim}</p>
-        `;
-
-        document.getElementById('q4-input').value = '';
+        document.getElementById('q4-input').value = this.shoulderValue;
         document.getElementById('q4-input').focus();
     },
 
@@ -437,47 +386,47 @@ const game = {
         const input = document.getElementById('q4-input');
         const text = input.value.trim();
         if (text) {
-            const q = this.q4Questions[this.q4Step];
-            this.q4Answers.push({
-                question: q.q,
-                answer: text
-            });
+            this.shoulderValue = text;
             this.attackEffect();
-            this.log(`【Q4回答】 Q: ${q.q.substring(0, 10)}... A: ${text}`);
-            this.logQA(q.q, text);
-            this.q4Step++;
-            this.renderQ4();
+            this.log(`【Q4回答】 肩代わりするもの: ${text}`);
+            this.logQA("代行編集は何を肩代わりする？", text);
+            this.nextStep();
         }
     },
 
-    // Quest 5
-    finishGame: function () {
-        const input = document.getElementById('q5-input');
-        this.finalSentence = input.value.trim() || "（未入力）";
+    // Quest 5: Closing
+    finishGame: function (isYes) {
+        this.closingYes = isYes;
         this.attackEffect();
-        this.log(`【まとめ】 ${this.finalSentence}`);
-        this.logQA("一文で言うなら？", this.finalSentence);
+        this.log(`【かくにん】 ズレはありますか？ → ${isYes ? 'いいえ(YES)' : 'はい(NO)'}`);
+        this.logQA("認識のズレは？", isYes ? "なし (クエストクリア)" : "あり (次の冒険へ)");
         setTimeout(() => this.nextStep(), 1000); // Wait for effect
     },
 
     // Summary & CSV
     renderSummary: function () {
-        document.getElementById('sum-critical').textContent = this.reasons[this.criticalIndex] || "なし";
-        document.getElementById('sum-sentence').textContent = this.finalSentence;
+        const msg = document.getElementById('summary-closing-msg');
+        if (this.closingYes) {
+            msg.innerHTML = `
+                <p>今日出た答え、どれも間違いじゃないです。</p>
+                <p>ただ、「私たちは、こういう価値を提供してるよね」という地図が少し揃ったと思っています。</p>
+                <p><strong>クエストクリア！ おめでとう！</strong></p>
+            `;
+            document.body.classList.add('gorgeous-ending');
+            this.showMessage("おめでとう！ すべての クエストを クリアした！");
+        } else {
+            msg.innerHTML = `
+                <p>なるほど、まだ冒険は続くようですね。</p>
+                <p>「じゃあ次の冒険で続きをやろう」</p>
+            `;
+            document.body.classList.remove('gorgeous-ending');
+            this.showMessage("ぼうけんは まだ つづく...");
+        }
 
-        document.getElementById('sum-task-list').innerHTML = this.classifications.task.map(i => `<li>${i}</li>`).join('');
-        document.getElementById('sum-impact-list').innerHTML = this.classifications.impact.map(i => `<li>${i}</li>`).join('');
-
-        document.getElementById('sum-q4-list').innerHTML = this.q4Answers.map(a => `
-            <li>
-                <div style="font-size:0.8rem; color:#888;">${a.question}</div>
-                <div>${a.answer}</div>
-            </li>
-        `).join('');
-
-        // Gorgeous Ending Effect
-        document.body.classList.add('gorgeous-ending');
-        this.showMessage("おめでとう！ すべての クエストを クリアした！");
+        document.getElementById('sum-shoulder').textContent = this.shoulderValue || "（未入力）";
+        document.getElementById('sum-client-list').innerHTML = this.classifications.client.map(i => `<li>${i}</li>`).join('');
+        document.getElementById('sum-editor-list').innerHTML = this.classifications.editor.map(i => `<li>${i}</li>`).join('');
+        document.getElementById('sum-hard-list').innerHTML = this.inHouseHard.map(i => `<li>${i}</li>`).join('');
     },
 
     downloadCSV: function () {
@@ -492,19 +441,18 @@ const game = {
         });
 
         // Q2
-        csvContent += `Quest 2,一番困るもの,${this.reasons[this.criticalIndex] || ""}\n`;
+        this.classifications.client.forEach(i => csvContent += `Quest 2,発注側の価値,${i}\n`);
+        this.classifications.editor.forEach(i => csvContent += `Quest 2,編集側の価値,${i}\n`);
+        this.classifications.both.forEach(i => csvContent += `Quest 2,両方の価値,${i}\n`);
 
         // Q3
-        this.classifications.task.forEach(i => csvContent += `Quest 3,作業としての価値,${i}\n`);
-        this.classifications.impact.forEach(i => csvContent += `Quest 3,影響としての価値,${i}\n`);
+        this.inHouseHard.forEach(i => csvContent += `Quest 3,内製では難しいもの,${i}\n`);
 
         // Q4
-        this.q4Answers.forEach(a => {
-            csvContent += `Quest 4,${a.question},${a.answer}\n`;
-        });
+        csvContent += `Quest 4,肩代わりするもの,${this.shoulderValue}\n`;
 
-        // Q5
-        csvContent += `Quest 5,一文で言うなら,${this.finalSentence}\n`;
+        // Closing
+        csvContent += `Closing,認識のズレ,${this.closingYes ? "なし" : "あり"}\n`;
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
