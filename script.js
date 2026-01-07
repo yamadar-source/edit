@@ -10,6 +10,7 @@ const game = {
     },
     q4Answers: [], // Array of objects { question, answer }
     finalSentence: "",
+    logs: [], // Array of { time, text }
 
     // Configuration
     enemies: [
@@ -61,6 +62,81 @@ const game = {
     init: function () {
         this.updateScene(0);
         this.showStep(0);
+
+        // Check for save data
+        if (localStorage.getItem('rpg_save')) {
+            const btn = document.getElementById('continue-btn');
+            if (btn) btn.style.display = 'inline-block';
+        }
+    },
+
+    // Save & Load System
+    saveGame: function () {
+        const data = {
+            currentStep: this.currentStep,
+            q4Step: this.q4Step,
+            reasons: this.reasons,
+            criticalIndex: this.criticalIndex,
+            classifications: this.classifications,
+            q4Answers: this.q4Answers,
+            finalSentence: this.finalSentence,
+            logs: this.logs
+        };
+        localStorage.setItem('rpg_save', JSON.stringify(data));
+        this.log("【システム】 ゲームを セーブしました");
+        alert("セーブしました！");
+    },
+
+    loadGame: function () {
+        const json = localStorage.getItem('rpg_save');
+        if (json) {
+            const data = JSON.parse(json);
+            this.currentStep = data.currentStep;
+            this.q4Step = data.q4Step;
+            this.reasons = data.reasons || [];
+            this.criticalIndex = data.criticalIndex;
+            this.classifications = data.classifications || { task: [], impact: [], uncategorized: [] };
+            this.q4Answers = data.q4Answers || [];
+            this.finalSentence = data.finalSentence || "";
+            this.logs = data.logs || [];
+
+            // Restore UI
+            this.updateScene(this.currentStep);
+            this.showStep(this.currentStep);
+            this.onStepEnter(this.currentStep);
+
+            // Restore Logs
+            document.getElementById('log-content').innerHTML = '';
+            this.logs.forEach(entry => this.renderLogEntry(entry));
+
+            // Restore specific step states
+            if (this.currentStep === 1) this.renderQ1List();
+            if (this.currentStep === 2) this.renderQ2();
+            if (this.currentStep === 3) this.renderQ3();
+
+            this.log("【システム】 セーブデータを ロードしました");
+        }
+    },
+
+    // Log System
+    log: function (text) {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const entry = { time: timeStr, text: text };
+        this.logs.push(entry);
+        this.renderLogEntry(entry);
+    },
+
+    renderLogEntry: function (entry) {
+        const container = document.getElementById('log-content');
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `
+            <div class="log-time">${entry.time}</div>
+            <div class="log-text">${entry.text}</div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
     },
 
     // Navigation
@@ -70,17 +146,11 @@ const game = {
             this.updateScene(this.currentStep);
             this.showStep(this.currentStep);
             this.onStepEnter(this.currentStep);
+            this.log(`【システム】 STEP ${this.currentStep} へ すすんだ`);
         }
     },
 
     updateScene: function (step) {
-        // Map steps to enemies
-        // Step 0-1: Slime (0)
-        // Step 2: Bat (1)
-        // Step 3: Ghost (2)
-        // Step 4: Golem (3)
-        // Step 5-6: Dragon (4)
-
         let enemyIndex = 0;
         if (step === 2) enemyIndex = 1;
         else if (step === 3) enemyIndex = 2;
@@ -91,7 +161,7 @@ const game = {
         document.getElementById('enemy-img').src = enemy.img;
 
         const bgLayer = document.getElementById('background-layer');
-        bgLayer.className = enemy.bg; // Apply background class
+        bgLayer.className = enemy.bg;
 
         this.showMessage(`${enemy.name} が あらわれた！`);
     },
@@ -153,6 +223,7 @@ const game = {
             input.focus();
             this.attackEffect();
             this.showMessage(`ゆうしゃは "${text}" と さけんだ！`);
+            this.log(`【こうげき】 ${text}`);
 
             document.getElementById('q1-next').disabled = false;
         }
@@ -176,6 +247,7 @@ const game = {
                 this.criticalIndex = index;
                 this.renderQ2();
                 this.attackEffect();
+                this.log(`【クリティカル】 ${reason} を せんたく`);
                 document.getElementById('q2-next').disabled = false;
             };
             list.appendChild(div);
@@ -215,11 +287,13 @@ const game = {
     moveItem: function (fromType, index) {
         const item = this.classifications[fromType].splice(index, 1)[0];
         let nextType = 'uncategorized';
-        if (fromType === 'uncategorized') nextType = 'task';
-        else if (fromType === 'task') nextType = 'impact';
-        else if (fromType === 'impact') nextType = 'uncategorized';
+        let nextTypeName = 'ミブンルイ';
+        if (fromType === 'uncategorized') { nextType = 'task'; nextTypeName = 'サギョウ'; }
+        else if (fromType === 'task') { nextType = 'impact'; nextTypeName = 'エイキョウ'; }
+        else if (fromType === 'impact') { nextType = 'uncategorized'; nextTypeName = 'ミブンルイ'; }
 
         this.classifications[nextType].push(item);
+        this.log(`【ぶんるい】 ${item} → ${nextTypeName}`);
         this.renderQ3();
     },
 
@@ -250,11 +324,13 @@ const game = {
         const input = document.getElementById('q4-input');
         const text = input.value.trim();
         if (text) {
+            const q = this.q4Questions[this.q4Step];
             this.q4Answers.push({
-                question: this.q4Questions[this.q4Step].q,
+                question: q.q,
                 answer: text
             });
             this.attackEffect();
+            this.log(`【Q4回答】 Q: ${q.q.substring(0, 10)}... A: ${text}`);
             this.q4Step++;
             this.renderQ4();
         }
@@ -265,6 +341,7 @@ const game = {
         const input = document.getElementById('q5-input');
         this.finalSentence = input.value.trim() || "（未入力）";
         this.attackEffect();
+        this.log(`【まとめ】 ${this.finalSentence}`);
         setTimeout(() => this.nextStep(), 1000); // Wait for effect
     },
 
