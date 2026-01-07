@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代行編集の価値を探すゲーム - Battle Mode</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="battle-scene">
+        <div id="background-layer"></div>
+
+        <div id="enemy-container">
+            <img id="enemy-img" src="slime.png" alt="Enemy">
+            <div id="damage-effect">9999!</div>
+        </div>
+
+        <div id="hero-container">
+            <img id="hero-img" src="hero.png" alt="Hero">
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        <!-- Message Window (Top) -->
+        <div id="message-window">
+            <p id="message-text">スライムが あらわれた！</p>
+        </div>
+
+        <!-- Main Interaction Area (Center/Bottom) -->
+        <div id="interaction-area">
+            <!-- Intro -->
+            <div id="step-0" class="step active">
+                <button class="btn-primary" onclick="game.nextStep()">ぼうけんを はじめる</button>
+            </div>
+
+            <!-- Quest 1 -->
+            <div id="step-1" class="step">
+                <div class="battle-input-group">
+                    <input type="text" id="q1-input" placeholder="こうげき（りゆう）を にゅうりょく"
+                        onkeypress="game.handleQ1Input(event)">
+                    <button class="btn-action" onclick="game.addReason()">こうげき</button>
+                </div>
+                <div class="status-window">
+                    <h3>MP (Money Point)</h3>
+                    <ul id="q1-list"></ul>
+                </div>
+                <button class="btn-next" onclick="game.nextStep()" disabled id="q1-next">つぎへ すすむ</button>
+            </div>
+
+            <!-- Quest 2 -->
+            <div id="step-2" class="step">
+                <p class="instruction">クリティカルヒット（いちばん こまるもの）を えらべ！</p>
+                <div id="q2-list" class="selection-list"></div>
+                <button class="btn-next" onclick="game.nextStep()" disabled id="q2-next">けってい</button>
+            </div>
+
+            <!-- Quest 3 -->
+            <div id="step-3" class="step">
+                <p class="instruction">ぞくせいを ぶんるいせよ！</p>
+                <div class="classification-container">
+                    <div class="column" id="col-task">
+                        <h3>サギョウ</h3>
+                        <div class="drop-zone" id="zone-task"></div>
+                    </div>
+                    <div class="column center">
+                        <h3>ミブンルイ</h3>
+                        <div class="drop-zone" id="zone-uncategorized"></div>
+                    </div>
+                    <div class="column" id="col-impact">
+                        <h3>エイキョウ</h3>
+                        <div class="drop-zone" id="zone-impact"></div>
+                    </div>
+                </div>
+                <button class="btn-next" onclick="game.nextStep()" disabled id="q3-next">つぎへ すすむ</button>
+            </div>
+
+            <!-- Quest 4 (Deep Dive) -->
+            <div id="step-4" class="step">
+                <div id="q4-container">
+                    <!-- Dynamic Q4 Content will be injected here -->
+                </div>
+                <div class="input-group-vertical">
+                    <input type="text" id="q4-input" placeholder="こたえを にゅうりょく" onkeypress="game.handleQ4Input(event)">
+                    <button class="btn-action" onclick="game.submitQ4Answer()">こうげき</button>
+                </div>
+            </div>
+
+            <!-- Quest 5 -->
+            <div id="step-5" class="step">
+                <p class="instruction">さいごの いちげき（まとめ）を はなて！</p>
+                <textarea id="q5-input" rows="3" placeholder="..."></textarea>
+                <button class="btn-primary" onclick="game.finishGame()">トドメを さす</button>
+            </div>
+
+            <!-- Summary -->
+            <div id="step-6" class="step">
+                <h2>ぼうけんの きろく</h2>
+                <div class="summary-scroll">
+                    <div class="summary-section">
+                        <h3>👑 クリティカル</h3>
+                        <p id="sum-critical"></p>
+                    </div>
+                    <div class="summary-section">
+                        <h3>💎 でんせつの コトバ</h3>
+                        <p id="sum-sentence"></p>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-col">
+                            <h4>サギョウ</h4>
+                            <ul id="sum-task-list"></ul>
+                        </div>
+                        <div class="summary-col">
+                            <h4>エイキョウ</h4>
+                            <ul id="sum-impact-list"></ul>
+                        </div>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-col">
+                            <h4>Q4 カイトウ</h4>
+                            <ul id="sum-q4-list"></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="btn-primary" onclick="game.downloadCSV()">きろくを セーブ (CSV)</button>
+                    <button class="btn-secondary" onclick="location.reload()">タイトルへ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
