@@ -13,6 +13,11 @@
 
 <body>
     <div id="game-wrapper">
+        <div id="qa-sidebar">
+            <h3>Q&A ログ</h3>
+            <div id="qa-content"></div>
+        </div>
+
         <div id="main-content">
             <div id="battle-scene">
                 <div id="background-layer"></div>
@@ -28,8 +33,18 @@
             </div>
 
             <div id="ui-layer">
-                <!-- Save Button (Absolute or Flex item) -->
-                <button id="save-btn" class="btn-small" onclick="game.saveGame()">セーブ</button>
+                <!-- Header Controls -->
+                <div class="header-controls">
+                    <button id="back-btn" class="btn-small" onclick="game.prevStep()" disabled>← もどる</button>
+                    <div class="right-controls">
+                        <button class="btn-small"
+                            onclick="document.getElementById('import-file').click()">ロード(読込)</button>
+                        <input type="file" id="import-file" style="display:none" onchange="game.importSave(this)"
+                            accept=".json">
+                        <button class="btn-small" onclick="game.exportSave()">セーブ(書出)</button>
+                        <button id="save-btn" class="btn-small" onclick="game.saveGame()">セーブ(保存)</button>
+                    </div>
+                </div>
 
                 <!-- Message Window (Top) -->
                 <div id="message-window">

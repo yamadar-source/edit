@@ -11,6 +11,7 @@ const game = {
     q4Answers: [], // Array of objects { question, answer }
     finalSentence: "",
     logs: [], // Array of { time, text }
+    qaLogs: [], // Array of { question, answer }
 
     // Configuration
     enemies: [
@@ -72,16 +73,7 @@ const game = {
 
     // Save & Load System
     saveGame: function () {
-        const data = {
-            currentStep: this.currentStep,
-            q4Step: this.q4Step,
-            reasons: this.reasons,
-            criticalIndex: this.criticalIndex,
-            classifications: this.classifications,
-            q4Answers: this.q4Answers,
-            finalSentence: this.finalSentence,
-            logs: this.logs
-        };
+        const data = this.createSaveData();
         localStorage.setItem('rpg_save', JSON.stringify(data));
         this.log("【システム】 ゲームを セーブしました");
         alert("セーブしました！");
@@ -90,32 +82,91 @@ const game = {
     loadGame: function () {
         const json = localStorage.getItem('rpg_save');
         if (json) {
-            const data = JSON.parse(json);
-            this.currentStep = data.currentStep;
-            this.q4Step = data.q4Step;
-            this.reasons = data.reasons || [];
-            this.criticalIndex = data.criticalIndex;
-            this.classifications = data.classifications || { task: [], impact: [], uncategorized: [] };
-            this.q4Answers = data.q4Answers || [];
-            this.finalSentence = data.finalSentence || "";
-            this.logs = data.logs || [];
-
-            // Restore UI
-            this.updateScene(this.currentStep);
-            this.showStep(this.currentStep);
-            this.onStepEnter(this.currentStep);
-
-            // Restore Logs
-            document.getElementById('log-content').innerHTML = '';
-            this.logs.forEach(entry => this.renderLogEntry(entry));
-
-            // Restore specific step states
-            if (this.currentStep === 1) this.renderQ1List();
-            if (this.currentStep === 2) this.renderQ2();
-            if (this.currentStep === 3) this.renderQ3();
-
+            this.loadData(JSON.parse(json));
             this.log("【システム】 セーブデータを ロードしました");
         }
+    },
+
+    createSaveData: function () {
+        return {
+            currentStep: this.currentStep,
+            q4Step: this.q4Step,
+            reasons: this.reasons,
+            criticalIndex: this.criticalIndex,
+            classifications: this.classifications,
+            q4Answers: this.q4Answers,
+            finalSentence: this.finalSentence,
+            logs: this.logs,
+            qaLogs: this.qaLogs
+        };
+    },
+
+    loadData: function (data) {
+        this.currentStep = data.currentStep;
+        this.q4Step = data.q4Step;
+        this.reasons = data.reasons || [];
+        this.criticalIndex = data.criticalIndex;
+        this.classifications = data.classifications || { task: [], impact: [], uncategorized: [] };
+        this.q4Answers = data.q4Answers || [];
+        this.finalSentence = data.finalSentence || "";
+        this.logs = data.logs || [];
+        this.qaLogs = data.qaLogs || [];
+
+        // Restore UI
+        this.updateScene(this.currentStep);
+        this.showStep(this.currentStep);
+        this.onStepEnter(this.currentStep);
+
+        // Restore Logs
+        document.getElementById('log-content').innerHTML = '';
+        this.logs.forEach(entry => this.renderLogEntry(entry));
+
+        // Restore QA Logs
+        document.getElementById('qa-content').innerHTML = '';
+        this.qaLogs.forEach(entry => this.renderQAEntry(entry));
+
+        // Restore specific step states
+        if (this.currentStep === 1) this.renderQ1List();
+        if (this.currentStep === 2) this.renderQ2();
+        if (this.currentStep === 3) this.renderQ3();
+    },
+
+    // Export / Import
+    exportSave: function () {
+        const data = this.createSaveData();
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rpg_save_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.log("【システム】 セーブデータを ファイルに かきだしました");
+    },
+
+    importSave: function (input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                this.loadData(data);
+                this.log("【システム】 ファイルから データを よみこみました");
+                alert("読み込み完了！");
+            } catch (err) {
+                alert("ファイルの読み込みに失敗しました");
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+        input.value = ''; // Reset input
     },
 
     // Log System
@@ -139,6 +190,25 @@ const game = {
         container.scrollTop = container.scrollHeight;
     },
 
+    // QA Log System
+    logQA: function (question, answer) {
+        const entry = { question, answer };
+        this.qaLogs.push(entry);
+        this.renderQAEntry(entry);
+    },
+
+    renderQAEntry: function (entry) {
+        const container = document.getElementById('qa-content');
+        const div = document.createElement('div');
+        div.className = 'qa-entry';
+        div.innerHTML = `
+            <div class="qa-question">${entry.question}</div>
+            <div class="qa-answer">${entry.answer}</div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    },
+
     // Navigation
     nextStep: function () {
         if (this.currentStep < 6) {
@@ -147,6 +217,16 @@ const game = {
             this.showStep(this.currentStep);
             this.onStepEnter(this.currentStep);
             this.log(`【システム】 STEP ${this.currentStep} へ すすんだ`);
+        }
+    },
+
+    prevStep: function () {
+        if (this.currentStep > 0) {
+            this.currentStep--;
+            this.updateScene(this.currentStep);
+            this.showStep(this.currentStep);
+            this.onStepEnter(this.currentStep);
+            this.log(`【システム】 STEP ${this.currentStep} へ もどった`);
         }
     },
 
@@ -164,6 +244,9 @@ const game = {
         bgLayer.className = enemy.bg;
 
         this.showMessage(`${enemy.name} が あらわれた！`);
+
+        // Back button state
+        document.getElementById('back-btn').disabled = (step === 0 || step === 6); // Disable on title and summary
     },
 
     showStep: function (stepIndex) {
@@ -224,6 +307,7 @@ const game = {
             this.attackEffect();
             this.showMessage(`ゆうしゃは "${text}" と さけんだ！`);
             this.log(`【こうげき】 ${text}`);
+            this.logQA("お金を払う理由は？", text);
 
             document.getElementById('q1-next').disabled = false;
         }
@@ -248,6 +332,7 @@ const game = {
                 this.renderQ2();
                 this.attackEffect();
                 this.log(`【クリティカル】 ${reason} を せんたく`);
+                this.logQA("一番困るものは？", reason);
                 document.getElementById('q2-next').disabled = false;
             };
             list.appendChild(div);
@@ -331,6 +416,7 @@ const game = {
             });
             this.attackEffect();
             this.log(`【Q4回答】 Q: ${q.q.substring(0, 10)}... A: ${text}`);
+            this.logQA(q.q, text);
             this.q4Step++;
             this.renderQ4();
         }
@@ -342,6 +428,7 @@ const game = {
         this.finalSentence = input.value.trim() || "（未入力）";
         this.attackEffect();
         this.log(`【まとめ】 ${this.finalSentence}`);
+        this.logQA("一文で言うなら？", this.finalSentence);
         setTimeout(() => this.nextStep(), 1000); // Wait for effect
     },
 
@@ -359,6 +446,10 @@ const game = {
                 <div>${a.answer}</div>
             </li>
         `).join('');
+
+        // Gorgeous Ending Effect
+        document.body.classList.add('gorgeous-ending');
+        this.showMessage("おめでとう！ すべての クエストを クリアした！");
     },
 
     downloadCSV: function () {
