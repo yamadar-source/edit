@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代行編集の価値を探すゲーム - Battle Mode</title>
+    <title>代行編集の価値をさがせ！ - Quest</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,28 +17,24 @@
             <h3>Q&A ログ</h3>
             <div id="qa-content"></div>
         </div>
-
         <div id="main-content">
             <div id="battle-scene">
                 <div id="background-layer"></div>
-
                 <div id="enemy-container">
                     <img id="enemy-img" src="slime.png" alt="Enemy">
                     <div id="damage-effect">9999!</div>
                 </div>
-
                 <div id="hero-container">
                     <div id="level-display">Lv. 1</div>
                     <img id="hero-img" src="hero.png" alt="Hero">
                     <div id="level-up-effect">LEVEL UP!</div>
                 </div>
             </div>
-
             <div id="ui-layer">
-                <!-- Header Controls -->
                 <div class="header-controls">
                     <button id="back-btn" class="btn-small" onclick="game.prevStep()" disabled>← もどる</button>
                     <div class="right-controls">
+                        <button id="help-btn" class="btn-small" onclick="game.showHelp()">？ お助け</button>
                         <button class="btn-small"
                             onclick="document.getElementById('import-file').click()">ロード(読込)</button>
                         <input type="file" id="import-file" style="display:none" onchange="game.importSave(this)"
@@ -47,22 +43,26 @@
                         <button id="save-btn" class="btn-small" onclick="game.saveGame()">セーブ(保存)</button>
                     </div>
                 </div>
-
-                <!-- Message Window (Top) -->
                 <div id="message-window">
-                    <p id="message-text">スライムが あらわれた！</p>
+                    <p id="message-text"></p>
                 </div>
-
-                <!-- Main Interaction Area (Center/Bottom) -->
                 <div id="interaction-area">
-                    <!-- Intro -->
+                    <!-- Quest Intro with Rules -->
                     <div id="step-0" class="step active">
+                        <h2>代行編集の価値をさがせ！</h2>
+                        <h3>〜ことばのちからで みんなの認識を そろえろ〜</h3>
+                        <p>【このクエストについて】</p>
+                        <ul>
+                            <li>せいかいは ひとつではありません</li>
+                            <li>はやく けつろんを ださなくてOKです</li>
+                            <li>ことばを あつめて、みんなの ちずを そろえるのが ゴールです</li>
+                        </ul>
+                        <p>はっちゅうがわ／へんしゅうがわ どちらの たちばの いけんでも OKです</p>
                         <button class="btn-primary" onclick="game.nextStep()">ぼうけんを はじめる</button>
                         <button class="btn-secondary" id="continue-btn" onclick="game.loadGame()"
                             style="display:none; margin-top:10px;">つづきから</button>
                     </div>
-
-                    <!-- Quest 1: Money Reason -->
+                    <!-- STEP1: スライム戦 -->
                     <div id="step-1" class="step">
                         <p class="instruction">質問①「代行編集に“お金を払う理由”って何だと思いますか？」</p>
                         <div class="battle-input-group">
@@ -74,83 +74,82 @@
                             <h3>MP (Money Point)</h3>
                             <ul id="q1-list"></ul>
                         </div>
-                        <button class="btn-next" onclick="game.nextStep()" disabled id="q1-next">つぎへ すすむ</button>
+                        <button class="btn-next" id="q1-next" disabled onclick="game.nextStep()">つぎへ すすむ</button>
                     </div>
-
-                    <!-- Quest 2: Who's Value? (Classification) -->
+                    <!-- STEP2: ログ整理 -->
                     <div id="step-2" class="step">
-                        <p class="instruction">質問②「今出た言葉って、“誰にとって”の価値だと思いますか？」</p>
-                        <div class="classification-container">
-                            <div class="column" id="col-client">
-                                <h3>発注側</h3>
-                                <div class="drop-zone" id="zone-client"></div>
-                            </div>
-                            <div class="column center">
-                                <h3>両方／未分類</h3>
-                                <div class="drop-zone" id="zone-both"></div>
-                            </div>
-                            <div class="column" id="col-editor">
-                                <h3>編集側</h3>
-                                <div class="drop-zone" id="zone-editor"></div>
-                            </div>
-                        </div>
-                        <button class="btn-next" onclick="game.nextStep()" disabled id="q2-next">けってい</button>
+                        <p class="instruction">スライムは ことばを のこして きえた…<br>さっき出た言葉をすこしだけ文章にしてみよう。</p>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">※ 今回は「クリエイターが撮影した“あと”に、何が
+                            たすかっているか」を イメージしてみてください</p>
+                        <div id="q2-sentence-area" class="sentence-input-group"></div>
+                        <button class="btn-next" id="q2-next" onclick="game.saveQ2Sentences(); game.nextStep();">つぎへ
+                            すすむ</button>
                     </div>
-
-                    <!-- Quest 3: In-house? (Selection) -->
+                    <!-- STEP3: 分かれ道 -->
                     <div id="step-3" class="step">
-                        <p class="instruction">質問③「それって“内製”でも同じことはできますか？」</p>
-                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">内製では難しい・迷うものを選んでください</p>
-                        <div id="q3-list" class="selection-list"></div>
-                        <button class="btn-next" onclick="game.nextStep()" disabled id="q3-next">つぎへ すすむ</button>
+                        <p class="instruction">まえに すすむと どうくつが あらわれた…<br>質問③「この“たすかること”は、ないせいでもおなじようにえられそうですか？」</p>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">※ クリエイター本人が 編集・判断・修正まで
+                            すべて背負った場合を想像してください</p>
+                        <div class="choice-buttons">
+                            <button class="btn-choice" onclick="game.setInHouseChoice('◎ えられる')">◎ えられる</button>
+                            <button class="btn-choice" onclick="game.setInHouseChoice('△ いちぶ えられる')">△ いちぶ えられる</button>
+                            <button class="btn-choice" onclick="game.setInHouseChoice('✕ むずかしそう')">✕ むずかしそう</button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">※ せいかいは ありません。「代行じゃないと むずかしそうな
+                            ところ」を さがしています</p>
+                        <button class="btn-next" id="q3-next" disabled onclick="game.nextStep()">つぎへ すすむ</button>
                     </div>
-
-                    <!-- Quest 4: Shoulder what? -->
+                    <!-- STEP4: 中ボス -->
                     <div id="step-4" class="step">
-                        <p class="instruction">質問④「代行編集って“◯◯を肩代わりしてくれる存在”と言えそうですか？」</p>
-                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">責任、判断、時間、不安、クオリティの担保 など</p>
+                        <p class="instruction">つよそうな まものが あらわれた！<br>質問④ 代行編集は「〇〇を かわりに ひきうけてくれる存在」と言えそうでしょうか？</p>
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">例：判断、責任、不安、品質担保、時間管理 など</p>
                         <div class="input-group-vertical">
-                            <input type="text" id="q4-input" placeholder="◯◯に当てはまる言葉を入力"
+                            <input type="text" id="q4-input" placeholder="〇〇に当てはまる言葉を入力"
                                 onkeypress="game.handleQ4Input(event)">
                             <button class="btn-action" onclick="game.submitQ4Answer()">こうげき</button>
                         </div>
                     </div>
-
-                    <!-- Quest 5: Closing -->
+                    <!-- STEP5: エンディング -->
                     <div id="step-5" class="step">
-                        <p class="instruction">「この認識、大きくズレてる感じはしませんか？」</p>
-                        <div class="nav-buttons">
-                            <button class="btn-primary" onclick="game.finishGame(true)">YES (クエストクリア)</button>
-                            <button class="btn-secondary" onclick="game.finishGame(false)">NO (次の冒険へ)</button>
+                        <p class="instruction">＼クエスト クリア！／</p>
+                        <div class="final-sentence-box">
+                            <p>代行編集の価値は、<br>「<span id="display-shoulder">〇〇</span>を かわりに ひきうけてくれること」。</p>
+                            <p>特に大きいのは、<br>「<input type="text" id="q5-focus-input" placeholder="△△を入力"
+                                    style="width: 150px; display: inline-block; margin: 0 5px;">を 気にせず 本来やるべきことに
+                                集中できる」点。</p>
                         </div>
+                        <p class="instruction" style="margin-top:20px;">この文章について「大きく ちがうかも」と思う人はいますか？</p>
+                        <div class="nav-buttons">
+                            <button class="btn-primary" onclick="game.finishGame(true)">いない (クエストクリア)</button>
+                            <button class="btn-secondary" onclick="game.finishGame(false)">いる (違和感あり)</button>
+                        </div>
+                        <p style="font-size:0.8rem; color:#aaa; margin-top:15px;">
+                            しかし… この 価値は まだ かんせい していない。<br>
+                            つぎの クエストで ほんとうに まもれるかが ためされる。
+                        </p>
                     </div>
-
-                    <!-- Summary -->
+                    <!-- STEP6: Summary & AI -->
                     <div id="step-6" class="step">
                         <h2>ぼうけんの きろく</h2>
                         <div class="summary-scroll">
-                            <div id="summary-closing-msg" style="margin-bottom: 20px; color: var(--accent-primary);">
+                            <div id="summary-closing-msg" style="margin-bottom:20px; color:var(--accent-primary);">
                             </div>
                             <div class="summary-section">
-                                <h3>💎 代行編集の価値（肩代わりするもの）</h3>
-                                <p id="sum-shoulder" style="font-size: 1.5rem;"></p>
+                                <h3>💎 代行編集の価値</h3>
+                                <p id="final-result-text"
+                                    style="font-size:1.1rem; line-height:1.6; text-align:left; background:rgba(0,0,0,0.5); padding:15px; border-radius:5px;">
+                                </p>
                             </div>
-                            <div class="summary-grid">
-                                <div class="summary-col">
-                                    <h4>発注側の価値</h4>
-                                    <ul id="sum-client-list"></ul>
+                            <div id="ai-summary-area" class="summary-section" style="display:none;">
+                                <h3>🤖 AIによる要約</h3>
+                                <div id="ai-summary-text"
+                                    style="font-size:1rem; line-height:1.5; text-align:left; white-space:pre-wrap;">
                                 </div>
-                                <div class="summary-col">
-                                    <h4>編集側の価値</h4>
-                                    <ul id="sum-editor-list"></ul>
-                                </div>
-                            </div>
-                            <div class="summary-section">
-                                <h3>🛠 内製では難しいもの</h3>
-                                <ul id="sum-hard-list"></ul>
                             </div>
                         </div>
                         <div class="nav-buttons">
+                            <button id="ai-summary-btn" class="btn-action"
+                                onclick="game.showAISummary()">AI要約を表示する</button>
                             <button class="btn-primary" onclick="game.downloadCSV()">きろくを セーブ (CSV)</button>
                             <button class="btn-secondary" onclick="location.reload()">タイトルへ</button>
                         </div>
@@ -161,6 +160,14 @@
         <div id="log-sidebar">
             <h3>ぼうけんの きろく</h3>
             <div id="log-content"></div>
+        </div>
+    </div>
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay" style="display:none">
+        <div class="modal-content">
+            <h3 id="help-title">お助けアイテム</h3>
+            <div id="help-text"></div>
+            <button class="btn-primary" onclick="game.closeHelp()" style="margin-top:20px;">わかった！</button>
         </div>
     </div>
     <script src="script.js"></script>

@@ -411,56 +411,93 @@ button:disabled {
     margin-right: 5px;
 }
 
-/* Quest 3 Classification */
-.classification-container {
-    display: flex;
-    gap: 10px;
+/* Quest 2 Sentence Inputs */
+.sentence-input-group {
     width: 100%;
-    height: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.column {
-    flex: 1;
-    background: #000;
-    border: 2px solid var(--window-border);
-    padding: 5px;
-    overflow-y: auto;
+.sentence-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 10px;
+    border-radius: 4px;
 }
 
-.draggable-item {
-    background: var(--window-bg);
-    border: 1px solid white;
-    padding: 5px;
-    margin-bottom: 5px;
-    cursor: pointer;
+.sentence-label {
     font-size: 0.9rem;
+    color: var(--accent-primary);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: left;
 }
 
-.selection-list {
-    width: 100%;
+/* Quest 3 Choice Buttons */
+.choice-buttons {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 10px;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px 0;
 }
 
-.selection-item {
+.btn-choice {
+    text-align: left;
+    padding: 15px 20px;
     background: #000;
     border: 2px solid #fff;
-    padding: 10px 20px;
-    cursor: pointer;
     transition: all 0.2s;
 }
 
-.selection-item:hover {
+.btn-choice:hover {
     background: var(--window-bg);
+    border-color: var(--accent-primary);
 }
 
-.selection-item.selected {
+.btn-choice.selected {
     background: var(--accent-primary);
     color: #000;
     border-color: #fff;
+}
+
+/* Quest 5 Final Sentence */
+.final-sentence-box {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--accent-primary);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: left;
+    width: 100%;
+    line-height: 1.8;
+    font-size: 1.2rem;
+}
+
+/* AI Summary Area */
+#ai-summary-area {
+    margin-top: 20px;
+    background: rgba(0, 50, 0, 0.3);
+    border: 1px solid #0f0;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+#ai-summary-text {
+    color: #cfc;
+}
+
+/* Obsolete / Removed */
+.classification-container,
+.column,
+.draggable-item,
+.selection-list,
+.selection-item {
+    display: none;
 }
 
 /* Quest 4 Deep Dive */
@@ -574,6 +611,12 @@ button:disabled {
     word-wrap: break-word;
 }
 
+.qa-entry.highlight {
+    background: rgba(255, 204, 0, 0.2);
+    border-left: 3px solid var(--accent-primary);
+    padding-left: 5px;
+}
+
 .qa-question {
     color: #aaa;
     font-size: 0.8rem;
@@ -597,6 +640,50 @@ button:disabled {
 .right-controls {
     display: flex;
     gap: 5px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--window-bg);
+    border: 4px solid var(--window-border);
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    border-radius: 8px;
+    animation: modalPop 0.3s ease-out;
+}
+
+#help-text {
+    text-align: left;
+    line-height: 1.6;
+    font-size: 1.1rem;
+    margin-top: 15px;
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 @keyframes fadeIn {
